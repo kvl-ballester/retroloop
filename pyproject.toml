@@ -1,0 +1,32 @@
+[project]
+name = "retroloop"
+version = "0.1.0"
+description = "Weekly team feedback and retrospective tool"
+requires-python = ">=3.13"
+dependencies = [
+    "Django>=6.0,<6.1",
+    "psycopg[binary]>=3.3",
+    "django-tasks-db>=0.12",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1",
+    "pytest-django>=4.12",
+    "ruff>=0.15",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+exclude = ["_docs", "*.md", "*.txt"]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
