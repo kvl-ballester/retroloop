@@ -1,0 +1,16 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Retroloop{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body class="flex min-h-screen flex-col bg-slate-50 text-slate-800">
+    {% block header %}{% endblock %}
+    <main class="flex-1">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

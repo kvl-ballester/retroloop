@@ -1,0 +1,19 @@
+{% extends "base_app.html" %}
+
+{% block title %}Sign up - Retroloop{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-md px-4 py-10 sm:px-6">
+    <div class="panel">
+        <h1 class="page-heading">Sign up</h1>
+        <form method="post" class="mt-6">
+            {% csrf_token %}
+            <div class="form-fields">{{ form.as_div }}</div>
+            <button type="submit" class="btn-primary mt-6 w-full">Sign up</button>
+        </form>
+        <p class="mt-4 text-sm text-slate-600">
+            Already have an account? <a href="{% url 'login' %}" class="link">Log in</a>.
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block header %}
+<header class="border-b border-slate-200 bg-white">
+    <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
+        <a href="{% url 'home' %}" class="font-semibold text-slate-900">Retroloop</a>
+        <nav class="flex items-center gap-4">
+            {% if user.is_authenticated %}
+                <span class="text-sm text-slate-700">{{ user.username }}</span>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-secondary">Log out</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}" class="link">Log in</a>
+                <a href="{% url 'signup' %}" class="btn-primary">Sign up</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>
+{% endblock %}

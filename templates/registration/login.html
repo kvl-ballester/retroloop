@@ -1,0 +1,22 @@
+{% extends "base_app.html" %}
+
+{% block title %}Log in - Retroloop{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-md px-4 py-10 sm:px-6">
+    <div class="panel">
+        <h1 class="page-heading">Log in</h1>
+        {% if form.non_field_errors %}
+            <div class="mt-4 rounded-md bg-error-50 p-4 text-sm text-error-700">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <form method="post" class="mt-6">
+            {% csrf_token %}
+            <div class="form-fields">{{ form.as_div }}</div>
+            <button type="submit" class="btn-primary mt-6 w-full">Log in</button>
+        </form>
+        <p class="mt-4 text-sm text-slate-600">
+            No account? <a href="{% url 'signup' %}" class="link">Sign up</a>.
+        </p>
+    </div>
+</div>
+{% endblock %}

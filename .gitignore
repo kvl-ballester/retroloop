@@ -13,6 +13,9 @@ db.sqlite3
 .env
 .env.*
 
+# Node (build-time tooling)
+/node_modules/
+
 # Editors / OS
 .DS_Store
 .idea/
