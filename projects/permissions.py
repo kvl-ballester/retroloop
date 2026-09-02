@@ -48,3 +48,16 @@ def can_submit_card(user, cycle):
     if not cycle:
         return False
     return is_member(user, cycle.project)
+
+
+def can_facilitate(user, retro):
+    """True when user may run a retrospective: project owner/facilitator, or the
+    cycle's designated facilitator."""
+    if not user or not user.is_authenticated:
+        return False
+    if not retro:
+        return False
+    cycle = retro.cycle
+    if is_facilitator(user, cycle.project):
+        return True
+    return cycle.facilitator_id == user.id

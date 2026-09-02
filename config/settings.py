@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'accounts',
     'projects',
     'cycles',
+    'retro',
 ]
 
 MIDDLEWARE = [

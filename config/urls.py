@@ -9,4 +9,5 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('', include('projects.urls')),
     path('', include('cycles.urls')),
+    path('', include('retro.urls')),
 ]

@@ -6,7 +6,7 @@ from django.views.decorators.http import require_http_methods
 
 from .forms import ProjectForm
 from .models import Membership, Project
-from .permissions import is_facilitator, is_member
+from .permissions import can_facilitate_cycle, is_facilitator, is_member
 
 
 def join_project(request, token):
@@ -29,6 +29,11 @@ def project_detail(request, project_id):
     past_cycles = [c for c in cycles if c.id != (current_cycle.id if current_cycle else None)]
     member_count = memberships.count()
     participation_count = current_cycle.participations.count() if current_cycle else 0
+    latest_closed = next(
+        (c for c in cycles if c.status == 'CLOSED'),
+        None,
+    )
+    existing_retro = getattr(latest_closed, 'retrospective', None) if latest_closed else None
     return render(
         request,
         'projects/project_detail.html',
@@ -43,6 +48,13 @@ def project_detail(request, project_id):
             'current_cycle': current_cycle,
             'participation_count': participation_count,
             'past_cycles': past_cycles,
+            'latest_closed_cycle': latest_closed,
+            'existing_retro': existing_retro,
+            'can_start_retro': (
+                can_facilitate_cycle(request.user, latest_closed)
+                if latest_closed and existing_retro is None
+                else None
+            ),
         },
     )
 

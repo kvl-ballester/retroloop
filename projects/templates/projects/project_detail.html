@@ -57,6 +57,26 @@
         </div>
     {% endif %}
 
+    {% if existing_retro %}
+        <div class="mt-6 panel">
+            <h2 class="text-lg font-semibold text-slate-900">Retrospective</h2>
+            <p class="mt-2 text-sm text-slate-700">
+                Week of {{ existing_retro.cycle.week_start }} · Stage {{ existing_retro.get_stage_display }}
+            </p>
+        </div>
+    {% elif can_start_retro %}
+        <div class="mt-6 panel">
+            <h2 class="text-lg font-semibold text-slate-900">Retrospective</h2>
+            <p class="mt-2 text-sm text-slate-700">
+                Week of {{ latest_closed_cycle.week_start }} is closed and ready for a retrospective.
+            </p>
+            <form method="post" action="{% url 'create_retro' project.id latest_closed_cycle.id %}" class="mt-4">
+                {% csrf_token %}
+                <button type="submit" class="btn-primary">Start retrospective</button>
+            </form>
+        </div>
+    {% endif %}
+
     <div class="mt-6 panel">
         <h2 class="text-lg font-semibold text-slate-900">Join link</h2>
         <p class="mt-2 text-sm text-slate-700">
