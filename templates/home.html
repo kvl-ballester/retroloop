@@ -4,11 +4,33 @@
 
 {% block content %}
 <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-    <h1 class="page-heading">Weekly feedback</h1>
+    <div class="flex items-center justify-between">
+        <h1 class="page-heading">Weekly feedback</h1>
+        {% if user.is_authenticated %}
+            <a href="{% url 'create_project' %}" class="btn-primary">New project</a>
+        {% endif %}
+    </div>
+
     {% if user.is_authenticated %}
-        <p class="mt-4 text-slate-700">You are logged in as {{ user.username }}.</p>
+        {% if projects %}
+            <ul class="mt-6 divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
+                {% for project in projects %}
+                    <li>
+                        <a href="{% url 'project_detail' project.id %}" class="flex items-center justify-between px-4 py-3 hover:bg-slate-50">
+                            <span class="text-sm font-medium text-slate-800">{{ project.name }}</span>
+                            <span class="text-sm text-slate-500">View →</span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="mt-6 text-slate-700">You are not part of any project yet.</p>
+            <div class="mt-4">
+                <a href="{% url 'create_project' %}" class="btn-primary">Create your first project</a>
+            </div>
+        {% endif %}
     {% else %}
-        <p class="mt-4 text-slate-700">You are not logged in.</p>
+        <p class="mt-6 text-slate-700">Log in or sign up to create and join project teams for weekly feedback.</p>
         <div class="mt-6 flex gap-3">
             <a href="{% url 'signup' %}" class="btn-primary">Sign up</a>
             <a href="{% url 'login' %}" class="btn-secondary">Log in</a>

@@ -1,0 +1,37 @@
+{% extends "base_app.html" %}
+
+{% block title %}{{ project.name }} - Retroloop{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <h1 class="page-heading">{{ project.name }}</h1>
+
+    <div class="mt-6 panel">
+        <h2 class="text-lg font-semibold text-slate-900">Join link</h2>
+        <p class="mt-2 text-sm text-slate-700">
+            Share this link so teammates can join the project.
+        </p>
+        <p class="mt-3 break-all rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            {{ join_url }}
+        </p>
+        {% if can_facilitate %}
+            <form method="post" action="{% url 'rotate_join_link' project.id %}" class="mt-4">
+                {% csrf_token %}
+                <button type="submit" class="btn-secondary">Rotate link</button>
+            </form>
+        {% endif %}
+    </div>
+
+    <div class="mt-6 panel">
+        <h2 class="text-lg font-semibold text-slate-900">Members</h2>
+        <ul class="mt-4 divide-y divide-slate-200">
+            {% for membership in memberships %}
+                <li class="flex items-center justify-between py-3">
+                    <span class="text-sm text-slate-800">{{ membership.user.username }}</span>
+                    <span class="text-sm text-slate-500">{{ membership.get_role_display }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
