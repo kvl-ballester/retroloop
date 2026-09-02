@@ -8,4 +8,6 @@ urlpatterns = [
         views.create_retro,
         name='create_retro',
     ),
+    path('retros/<int:retro_id>/advance/', views.advance, name='advance_retro'),
+    path('retros/<int:retro_id>/state', views.state, name='retro_state'),
 ]
