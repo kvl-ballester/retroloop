@@ -27,3 +27,15 @@ def is_member_of_project(user, project):
 
 def is_facilitator_of_project(user, project):
     return is_facilitator(user, project)
+
+
+def can_facilitate_cycle(user, cycle):
+    """True when user may run a cycle: project owner, project facilitator, or
+    the cycle's designated facilitator."""
+    if not user or not user.is_authenticated:
+        return False
+    if not cycle:
+        return False
+    if is_facilitator(user, cycle.project):
+        return True
+    return cycle.facilitator_id == user.id

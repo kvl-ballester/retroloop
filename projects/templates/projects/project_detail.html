@@ -7,6 +7,54 @@
     <h1 class="page-heading">{{ project.name }}</h1>
 
     <div class="mt-6 panel">
+        <h2 class="text-lg font-semibold text-slate-900">Current cycle</h2>
+        {% if current_cycle %}
+            <dl class="mt-4 grid grid-cols-1 gap-y-3 sm:grid-cols-3">
+                <div>
+                    <dt class="text-sm text-slate-500">Week starting</dt>
+                    <dd class="text-sm font-medium text-slate-800">{{ current_cycle.week_start }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm text-slate-500">Facilitator</dt>
+                    <dd class="text-sm font-medium text-slate-800">{% if current_cycle.facilitator %}{{ current_cycle.facilitator.username }}{% else %}—{% endif %}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm text-slate-500">Status</dt>
+                    <dd class="text-sm font-medium text-slate-800">{{ current_cycle.get_status_display }}</dd>
+                </div>
+            </dl>
+            <p class="mt-4 text-sm text-slate-700">{{ participation_count }} of {{ membership_count }} members have submitted</p>
+            {% if can_facilitate %}
+                <form method="post" action="{% url 'close_cycle' project.id current_cycle.id %}" class="mt-4">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-secondary">Close cycle</button>
+                </form>
+            {% endif %}
+        {% else %}
+            <p class="mt-4 text-sm text-slate-700">No current cycle.</p>
+            {% if can_facilitate %}
+                <div class="mt-4">
+                    <a href="{% url 'create_cycle' project.id %}" class="btn-primary">Start a cycle</a>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    {% if past_cycles %}
+        <div class="mt-6 panel">
+            <h2 class="text-lg font-semibold text-slate-900">Previous cycles</h2>
+            <ul class="mt-4 divide-y divide-slate-200">
+                {% for cycle in past_cycles %}
+                    <li class="flex items-center justify-between py-3">
+                        <span class="text-sm text-slate-800">Week of {{ cycle.week_start }}</span>
+                        <span class="text-sm text-slate-500">{{ cycle.get_status_display }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <div class="mt-6 panel">
         <h2 class="text-lg font-semibold text-slate-900">Join link</h2>
         <p class="mt-2 text-sm text-slate-700">
             Share this link so teammates can join the project.

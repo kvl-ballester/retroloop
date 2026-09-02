@@ -1,0 +1,20 @@
+{% extends "base_app.html" %}
+
+{% block title %}Start a cycle - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <h1 class="page-heading">Start a feedback cycle</h1>
+    <p class="mt-2 text-sm text-slate-700">{{ project.name }}</p>
+    <form method="post" action="{% url 'create_cycle' project.id %}" class="mt-6 max-w-lg">
+        {% csrf_token %}
+        <div class="form-fields">
+            {{ form.as_div }}
+        </div>
+        <div class="mt-6 flex gap-3">
+            <button type="submit" class="btn-primary">Start cycle</button>
+            <a href="{% url 'project_detail' project.id %}" class="btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
