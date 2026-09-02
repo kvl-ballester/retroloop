@@ -61,7 +61,8 @@ class Card(models.Model):
     text = models.TextField(max_length=1000)
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name='feedback_cards',
     )
     is_anonymous = models.BooleanField(default=False)
@@ -72,4 +73,5 @@ class Card(models.Model):
         ordering = ['position', 'created_at']
 
     def __str__(self):
-        return f'{self.get_category_display()} card by {self.author.username}'
+        name = self.author.username if self.author else 'anonymous'
+        return f'{self.get_category_display()} card by {name}'

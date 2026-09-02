@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from cycles.models import Card, FeedbackCycle
+from cycles.models import Card, CycleParticipation, FeedbackCycle
 from projects.models import Membership, Project
 from retro.models import Retrospective
 from retro.serializers import serialize_state
@@ -159,7 +159,7 @@ class StateSerializationTests(TestCase):
         self.assertEqual(payload['cycle'], self.cycle.id)
 
     def test_no_card_content_before_reveal(self):
-        payload = serialize_state(self.retro, self.member, with_cards=True)
+        payload = serialize_state(self.retro, self.member)
         self.assertNotIn('OWNER CARD', str(payload))
         self.assertNotIn('MEMBER CARD', str(payload))
         self.assertEqual(payload['cards'], [])
@@ -168,14 +168,14 @@ class StateSerializationTests(TestCase):
         while self.retro.stage != Retrospective.Stage.VOTE:
             self.retro = advance_stage(self.retro, self.owner) or self.retro
         self.assertEqual(self.retro.stage, Retrospective.Stage.VOTE)
-        payload = serialize_state(self.retro, self.member, with_cards=True)
+        payload = serialize_state(self.retro, self.member)
         self.assertNotIn('votes', payload)
         self.assertFalse(payload['votes_revealed'])
 
     def test_votes_revealed_after_vote(self):
         while self.retro.stage != Retrospective.Stage.DISCUSS:
             self.retro = advance_stage(self.retro, self.owner) or self.retro
-        payload = serialize_state(self.retro, self.member, with_cards=True)
+        payload = serialize_state(self.retro, self.member)
         self.assertTrue(payload['votes_revealed'])
 
 
@@ -221,3 +221,101 @@ class StateEndpointTests(TestCase):
         response = self.client.get(reverse('retro_state', args=[self.retro.id]))
         self.assertEqual(response.status_code, 302)
         self.assertIn(reverse('login'), response.url)
+
+
+class RevealSideEffectsTests(TestCase):
+    def setUp(self):
+        self.owner = make_user('owner')
+        self.project, self.cycle, self.retro = make_retro(self.owner)
+        self.member = make_user('member')
+        Membership.objects.create(project=self.project, user=self.member)
+        self.anonymous = make_card(self.cycle, self.member, text='ANON', is_anonymous=True)
+        self.attributed = make_card(self.cycle, self.member, text='ATTRIB')
+        CycleParticipation.objects.create(
+            cycle=self.cycle, user=self.member, submitted_at=timezone.now()
+        )
+
+    def test_anonymous_authorship_destroyed_at_db_level(self):
+        advance_stage(self.retro, self.owner)
+        by_db = (
+            Card.objects.filter(cycle=self.cycle, is_anonymous=True)
+            .filter(author_id__isnull=False)
+            .count()
+        )
+        self.assertEqual(by_db, 0)
+        self.assertIsNone(self.anonymous.__class__.objects.get(id=self.anonymous.id).author)
+
+    def test_attributed_cards_keep_author(self):
+        advance_stage(self.retro, self.owner)
+        self.attributed.refresh_from_db()
+        self.assertEqual(self.attributed.author, self.member)
+        self.assertFalse(self.attributed.is_anonymous)
+
+    def test_positions_contiguous_unique(self):
+        for i in (2, 3, 4):
+            make_card(self.cycle, self.member, text=f'card {i}')
+        advance_stage(self.retro, self.owner)
+        positions = list(Card.objects.filter(cycle=self.cycle).values_list('position', flat=True))
+        self.assertEqual(sorted(positions), list(range(1, len(positions) + 1)))
+        self.assertEqual(len(set(positions)), len(positions))
+
+    def test_participation_survives_reveal(self):
+        advance_stage(self.retro, self.owner)
+        participation = CycleParticipation.objects.get(cycle=self.cycle, user=self.member)
+        self.assertIsNotNone(participation.submitted_at)
+
+    def test_reveal_is_one_shot(self):
+        advance_stage(self.retro, self.owner)
+        self.retro.refresh_from_db()
+        first_version, first_stage = self.retro.version, self.retro.stage
+        with mock.patch('retro.services._reveal_side_effects') as hook:
+            advance_stage(self.retro, self.owner)
+            hook.assert_not_called()
+        self.retro.refresh_from_db()
+        self.assertGreater(self.retro.version, first_version)
+        self.assertNotEqual(self.retro.stage, first_stage)
+
+    def test_enqueue_hook_fires_once_on_reveal(self):
+        with mock.patch('retro.services._enqueue_clustering') as enqueue:
+            advance_stage(self.retro, self.owner)
+            enqueue.assert_called_once_with(self.retro)
+
+    def test_enqueue_hook_not_fired_on_later_transition(self):
+        advance_stage(self.retro, self.owner)
+        with mock.patch('retro.services._enqueue_clustering') as enqueue:
+            advance_stage(self.retro, self.owner)
+            enqueue.assert_not_called()
+
+    def test_reveal_with_zero_cards_succeeds(self):
+        Card.objects.filter(cycle=self.cycle).delete()
+        result = advance_stage(self.retro, self.owner)
+        self.assertIsNotNone(result)
+        self.assertEqual(self.retro.stage, Retrospective.Stage.REVEAL)
+
+    def test_reveal_with_zero_anonymous_cards_succeeds(self):
+        self.anonymous.is_anonymous = False
+        self.anonymous.save()
+        result = advance_stage(self.retro, self.owner)
+        self.assertIsNotNone(result)
+        self.attributed.refresh_from_db()
+        self.assertEqual(self.attributed.author, self.member)
+
+
+class RevealVisibilityFlipTests(TestCase):
+    def setUp(self):
+        self.owner = make_user('owner')
+        self.project, self.cycle, self.retro = make_retro(self.owner)
+        self.member = make_user('member')
+        Membership.objects.create(project=self.project, user=self.member)
+        make_card(self.cycle, self.member, text='SECRET CARD')
+
+    def test_cards_hidden_before_reveal(self):
+        payload = serialize_state(self.retro, self.member)
+        self.assertEqual(payload['cards'], [])
+        self.assertNotIn('SECRET CARD', str(payload))
+
+    def test_cards_serialized_in_position_order_after_reveal(self):
+        advance_stage(self.retro, self.owner)
+        payload = serialize_state(self.retro, self.member)
+        self.assertEqual(len(payload['cards']), 1)
+        self.assertEqual(payload['cards'][0]['text'], 'SECRET CARD')

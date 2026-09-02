@@ -1,3 +1,5 @@
+import secrets
+
 from django.db import transaction
 from django.utils import timezone
 
@@ -13,9 +15,43 @@ STAGE_ORDER = [
 ]
 
 
+def _destroy_anonymous_authorship(retro):
+    """Sever the authorship link of every anonymous card on the cycle."""
+    retro.cycle.cards.filter(is_anonymous=True).update(author=None)
+
+
+def _shuffle_positions(retro):
+    """Reassign every card a contiguous 1..n position in a shuffled order so
+    reveal order leaks nothing about creation order."""
+    card_ids = list(
+        retro.cycle.cards.order_by('position', 'created_at').values_list('pk', flat=True)
+    )
+    shuffled = card_ids[:]
+    for i in range(len(shuffled) - 1, 0, -1):
+        j = secrets.randbelow(i + 1)
+        shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
+    cards = retro.cycle.cards.in_bulk(shuffled)
+    for position, card_id in enumerate(shuffled, start=1):
+        cards[card_id].position = position
+        cards[card_id].save(update_fields=['position'])
+
+
+def _enqueue_clustering(retro):
+    """Kick off the auto-clustering job. No-ops when the service is not
+    available so the MVP runs without a worker or LLM configured."""
+    try:
+        from config.tasks import enqueue_clustering_task
+    except ImportError:
+        return
+    enqueue_clustering_task(retro.id)
+
+
 def _reveal_side_effects(retro):
-    """Applied on DRAFT -> REVEAL. Stubbed here; implemented in #10."""
-    pass
+    """Make every card visible: destroy anonymous authorship, shuffle order,
+    and enqueue clustering."""
+    _destroy_anonymous_authorship(retro)
+    _shuffle_positions(retro)
+    _enqueue_clustering(retro)
 
 
 @transaction.atomic
