@@ -48,3 +48,28 @@ class CycleParticipation(models.Model):
 
     def __str__(self):
         return f'{self.user.username} in cycle {self.cycle_id}'
+
+
+class Card(models.Model):
+    class Category(models.TextChoices):
+        START = 'START', 'Start'
+        STOP = 'STOP', 'Stop'
+        CONTINUE = 'CONTINUE', 'Continue'
+
+    cycle = models.ForeignKey(FeedbackCycle, on_delete=models.CASCADE, related_name='cards')
+    category = models.CharField(max_length=20, choices=Category.choices)
+    text = models.TextField(max_length=1000)
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='feedback_cards',
+    )
+    is_anonymous = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    position = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['position', 'created_at']
+
+    def __str__(self):
+        return f'{self.get_category_display()} card by {self.author.username}'

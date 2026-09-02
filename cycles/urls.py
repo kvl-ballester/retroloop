@@ -13,4 +13,15 @@ urlpatterns = [
         views.close_cycle,
         name='close_cycle',
     ),
+    path('cycles/<int:cycle_id>/feedback/', views.feedback_form, name='feedback'),
+    path(
+        'cycles/<int:cycle_id>/cards/<int:card_id>/edit/',
+        views.edit_card,
+        name='edit_card',
+    ),
+    path(
+        'cycles/<int:cycle_id>/cards/<int:card_id>/delete/',
+        views.delete_card,
+        name='delete_card',
+    ),
 ]

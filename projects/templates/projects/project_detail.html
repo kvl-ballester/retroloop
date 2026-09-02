@@ -24,12 +24,15 @@
                 </div>
             </dl>
             <p class="mt-4 text-sm text-slate-700">{{ participation_count }} of {{ membership_count }} members have submitted</p>
-            {% if can_facilitate %}
-                <form method="post" action="{% url 'close_cycle' project.id current_cycle.id %}" class="mt-4">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-secondary">Close cycle</button>
-                </form>
-            {% endif %}
+            <div class="mt-4 flex gap-3">
+                <a href="{% url 'feedback' current_cycle.id %}" class="btn-primary">Submit feedback</a>
+                {% if can_facilitate %}
+                    <form method="post" action="{% url 'close_cycle' project.id current_cycle.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-secondary">Close cycle</button>
+                    </form>
+                {% endif %}
+            </div>
         {% else %}
             <p class="mt-4 text-sm text-slate-700">No current cycle.</p>
             {% if can_facilitate %}

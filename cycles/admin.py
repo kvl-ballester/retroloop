@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import CycleParticipation, FeedbackCycle
+from .models import Card, CycleParticipation, FeedbackCycle
 
 
 @admin.register(FeedbackCycle)
@@ -12,3 +12,9 @@ class FeedbackCycleAdmin(admin.ModelAdmin):
 @admin.register(CycleParticipation)
 class CycleParticipationAdmin(admin.ModelAdmin):
     list_display = ('cycle', 'user', 'card_count', 'submitted_at')
+
+
+@admin.register(Card)
+class CardAdmin(admin.ModelAdmin):
+    list_display = ('cycle', 'category', 'author', 'is_anonymous', 'position')
+    list_filter = ('category', 'is_anonymous')

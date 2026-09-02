@@ -39,3 +39,12 @@ def can_facilitate_cycle(user, cycle):
     if is_facilitator(user, cycle.project):
         return True
     return cycle.facilitator_id == user.id
+
+
+def can_submit_card(user, cycle):
+    """True when user is a project member and may submit feedback cards to it."""
+    if not user or not user.is_authenticated:
+        return False
+    if not cycle:
+        return False
+    return is_member(user, cycle.project)

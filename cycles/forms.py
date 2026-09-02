@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from django import forms
 
-from .models import FeedbackCycle
+from .models import Card, FeedbackCycle
 
 
 class FeedbackCycleForm(forms.ModelForm):
@@ -41,3 +41,26 @@ class FeedbackCycleForm(forms.ModelForm):
             if cleaned['closes_at'] <= cleaned['opens_at']:
                 self.add_error('closes_at', 'Closes must be after it opens.')
         return cleaned
+
+
+class CardForm(forms.ModelForm):
+    class Meta:
+        model = Card
+        fields = ['category', 'text', 'is_anonymous']
+        widgets = {
+            'text': forms.Textarea(attrs={'rows': 3}),
+        }
+
+    def clean_text(self):
+        text = self.cleaned_data.get('text', '')
+        text = text.strip()
+        if not text:
+            raise forms.ValidationError('Card text is required.')
+        return text
+
+
+class EditCardForm(CardForm):
+    """Bound for editing a card; never changes the anonymous flag."""
+
+    class Meta(CardForm.Meta):
+        fields = ['category', 'text']

@@ -23,7 +23,7 @@ python_files = ["tests.py", "test_*.py", "*_tests.py"]
 [tool.ruff]
 line-length = 100
 target-version = "py313"
-exclude = ["_docs", "*.md", "*.txt"]
+exclude = ["_docs", "*.md", "*.txt", "*/migrations/*"]
 
 [tool.ruff.format]
 quote-style = "single"
